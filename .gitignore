@@ -1,0 +1,12 @@
+node_modules/
+.next/
+/content/
+.env*
+!.env.example
+*.tsbuildinfo
+playwright-report/
+test-results/
+work/
+.DS_Store
+outputs/*
+!outputs/implementation-status.md
