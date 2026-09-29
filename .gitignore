@@ -10,3 +10,8 @@ work/
 .DS_Store
 outputs/*
 !outputs/implementation-status.md
+/apple/.build/
+/apple/.swiftpm/
+/apple/build/
+xcuserdata/
+*.xcuserstate
