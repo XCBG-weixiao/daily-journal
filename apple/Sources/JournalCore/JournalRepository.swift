@@ -57,26 +57,31 @@ public actor JournalRepository {
                 } catch { result.issues.append(ContentIssue(file: relative, message: error.localizedDescription)) }
             }
         }
+        try loadManagement(into: &result)
         return result
     }
 
     public func save(_ input: Entry, now: Date = Date()) throws -> Entry {
-        let data = try snapshot(now: now)
-        var entry = try MarkdownCodec.validated(input, activities: data.activities, now: now)
-        let folder = try existing("entries"), file = folder.appendingPathComponent(entry.id + ".md")
-        let text = try MarkdownCodec.encode(entry)
-        try coordinate(folder, writing: true) { _ in
+        try coordinate(directory, writing: true) { _ in
+            let data = try snapshot(now: now)
+            var entry = try MarkdownCodec.validated(input, activities: data.activities, now: now)
+            if let id = entry.activityID, data.archivedActivityIDs.contains(id),
+               !data.entries.contains(where: { $0.id == entry.id && $0.activityID == id && entry.hash != nil }) {
+                throw JournalError("此活动已归档，请先取消归档后添加记录")
+            }
+            let folder = try existing("entries"), file = folder.appendingPathComponent(entry.id + ".md")
+            let text = try MarkdownCodec.encode(entry)
             try assertWithin(file, parent: folder)
             let exists = FileManager.default.fileExists(atPath: file.path)
             if exists {
                 try local(file)
                 let old = try String(contentsOf: file, encoding: .utf8)
-                guard entry.hash != nil, MarkdownCodec.hash(old) == entry.hash else { throw JournalError("文件已被修改或已存在。当前草稿已保留；请复制正文，关闭编辑器并重新打开记录后合并。") }
-            } else if entry.hash != nil { throw JournalError("原文件已被移动或删除。当前草稿已保留，请先确认原文件。") }
+                guard entry.hash != nil, MarkdownCodec.hash(old) == entry.hash else { throw JournalConflict("文件已被修改或已存在。请查看磁盘版本，或将当前草稿另存为新记录。") }
+            } else if entry.hash != nil { throw JournalConflict("原文件已被移动或删除。可以保留草稿，或另存为新记录。") }
             try atomicWrite(Data(text.utf8), to: file, replacing: exists)
+            entry.hash = MarkdownCodec.hash(text)
+            return entry
         }
-        entry.hash = MarkdownCodec.hash(text)
-        return entry
     }
 
     public func importImage(_ bytes: Data, entryID: String) throws -> String {
@@ -136,7 +141,7 @@ public actor JournalRepository {
         return ext
     }
 
-    private func existing(_ relative: String) throws -> URL {
+    func existing(_ relative: String) throws -> URL {
         let url = directory.appendingPathComponent(relative).standardizedFileURL
         try assertWithin(url, parent: directory)
         _ = try url.resourceValues(forKeys: [.isDirectoryKey])
@@ -144,13 +149,13 @@ public actor JournalRepository {
     }
 }
 
-private func assertWithin(_ url: URL, parent: URL) throws {
+func assertWithin(_ url: URL, parent: URL) throws {
     let root = parent.resolvingSymlinksInPath().standardizedFileURL.path
     let target = url.resolvingSymlinksInPath().standardizedFileURL.path
     guard target.hasPrefix(root + "/") else { throw JournalError("路径超出允许的内容目录：\(url.lastPathComponent)") }
 }
 
-private func local(_ file: URL) throws {
+func local(_ file: URL) throws {
     let values = try file.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey,
                                                  .ubiquitousItemDownloadingErrorKey, .ubiquitousItemUploadingErrorKey])
     if let error = values.ubiquitousItemDownloadingError { throw error }
@@ -160,9 +165,9 @@ private func local(_ file: URL) throws {
     }
 }
 
-private func read(_ url: URL) throws -> Data { try coordinate(url, writing: false) { try Data(contentsOf: $0) } }
+func read(_ url: URL) throws -> Data { try coordinate(url, writing: false) { try Data(contentsOf: $0) } }
 
-private func atomicWrite(_ data: Data, to file: URL, replacing: Bool) throws {
+func atomicWrite(_ data: Data, to file: URL, replacing: Bool) throws {
     let temp = file.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).tmp")
     try data.write(to: temp, options: .withoutOverwriting)
     let result = replacing ? Darwin.rename(temp.path, file.path) : Darwin.link(temp.path, file.path)
@@ -171,7 +176,7 @@ private func atomicWrite(_ data: Data, to file: URL, replacing: Bool) throws {
     guard result == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(savedErrno)) }
 }
 
-private func resolveVersions(_ file: URL) throws {
+func resolveVersions(_ file: URL) throws {
     guard !(NSFileVersion.unresolvedConflictVersionsOfItem(at: file) ?? []).isEmpty else { return }
     try coordinate(file, writing: true) { url in
         let versions = NSFileVersion.unresolvedConflictVersionsOfItem(at: url) ?? []
@@ -190,7 +195,7 @@ private func resolveVersions(_ file: URL) throws {
     }
 }
 
-private func coordinate<T>(_ url: URL, writing: Bool, operation: (URL) throws -> T) throws -> T {
+func coordinate<T>(_ url: URL, writing: Bool, operation: (URL) throws -> T) throws -> T {
     let coordinator = NSFileCoordinator(filePresenter: nil)
     var error: NSError?, result: Result<T, Error>?
     let access: (URL) -> Void = { location in result = Result { try operation(location) } }

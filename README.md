@@ -4,7 +4,7 @@
 
 ## Mac 与 iPhone 原生应用
 
-Mac 原生版已实现月历、时间轴、热力图、搜索、统计和图文编辑，可直接打开同一 Markdown 日记库。构建后运行 `apple/build/日常.app`；安装、构建与验证状态见 [Mac 应用说明](apple/README.md)。iPhone 版暂缓，跨设备 iCloud 同步仍待真机验证。
+Mac 原生版支持月历、时间轴、热力图、搜索、统计和图文编辑，也可在应用内新建与管理活动、归档保留历史、删除与恢复记录、续写本机草稿。可直接打开同一 Markdown 日记库。构建后运行 `apple/build/日常.app`；安装、构建与验证状态见 [Mac 应用说明](apple/README.md)。iPhone 版暂缓，跨设备 iCloud 同步仍待真机验证。
 
 ## 本地运行
 

@@ -21,7 +21,7 @@ struct StatsStrip: View {
     var metrics: [Metric] = Metric.allCases
     var body: some View {
         let summary = Summary(entries)
-        HStack(alignment: .top, spacing: 16) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 105), alignment: .leading)], alignment: .leading, spacing: 16) {
             MetricTile(title: "活动次数", value: "\(summary.count)")
             MetricTile(title: "活跃天数", value: "\(summary.days)")
             ForEach(metrics, id: \.self) { metric in MetricTile(title: "\(metric.title) / \(metric.unit)", value: numberLabel(summary.sums[metric])) }
@@ -52,15 +52,22 @@ struct EntryRows: View {
                                     }
                                 }.font(.caption).foregroundStyle(.secondary)
                                 if !entry.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    Text(entry.body.trimmingCharacters(in: .whitespacesAndNewlines)).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                                    Text(JournalText.excerpt(entry.body)).font(.callout).foregroundStyle(.secondary).lineLimit(2)
                                 }
                                 if let tags = entry.tags, !tags.isEmpty { Text(tags.map { "#" + $0 }.joined(separator: "  ")).font(.caption).foregroundStyle(Color.journalGreen).lineLimit(1) }
                             }
                             Spacer(minLength: 0)
+                            if let repository = store.repository, let reference = entry.cover ?? JournalText.imageReferences(entry.body).first {
+                                JournalImage(repository: repository, url: URL(string: reference, relativeTo: JournalMarkdown.imageBase)?.absoluteURL, revision: store.revision)
+                                    .frame(width: 64, height: 52).clipped()
+                            }
                             Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                         }.padding(12).contentShape(Rectangle())
                             .background(store.selectedEntry == entry.id ? Color.journalGreen.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: 10))
-                    }.buttonStyle(.plain)
+                    }.buttonStyle(.plain).contextMenu {
+                        Button("编辑记录", systemImage: "pencil") { store.editEntry(entry) }
+                        Button("移入回收站…", systemImage: "trash", role: .destructive) { store.deletingEntry = entry }
+                    }.disabled(store.busy)
                 }
             }
         }
@@ -130,7 +137,7 @@ struct CalendarScreen: View {
                 }
                 Paper {
                     VStack(alignment: .leading, spacing: 18) {
-                        HStack(spacing: 14) { ForEach(store.snapshot.activities) { activity in Label(activity.name, systemImage: "circle.fill").font(.caption).foregroundStyle(Color(hex: activity.color)) } }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], alignment: .leading, spacing: 8) { ForEach(store.snapshot.activities) { activity in Label(activity.name, systemImage: "circle.fill").font(.caption).foregroundStyle(Color(hex: activity.color)) } }
                         MonthGrid(month: month, selected: day, entries: store.snapshot.entries, activities: store.snapshot.activities) { value in day = value; month = String(value.prefix(7)) }
                     }
                 }
@@ -140,16 +147,17 @@ struct CalendarScreen: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
                         ForEach(store.snapshot.activities) { activity in
                             let summary = Summary(store.snapshot.entries.filter { $0.activityID == activity.id && $0.date.hasPrefix(month) })
-                            let metric: Metric = activity.metrics.contains(.distance) ? .distance : .duration
+                            let metric = activity.metrics.contains(.distance) ? Metric.distance : activity.metrics.first
                             Button {
                                 store.activityFocusMonth = month
+                                store.activityFocusDay = nil
                                 store.selection = "activity:" + activity.id
                             } label: {
                                 Paper {
                                     VStack(alignment: .leading, spacing: 8) {
                                         Text(activity.icon + " " + activity.name).font(.subheadline)
                                         Text("\(summary.count) 次").font(.title2.bold())
-                                        Text("\(summary.days) 天 · \(numberLabel(summary.sums[metric])) \(metric.unit)").font(.caption).foregroundStyle(.secondary)
+                                        Text("\(summary.days) 天" + (metric.map { " · \(numberLabel(summary.sums[$0])) \($0.unit)" } ?? "")).font(.caption).foregroundStyle(.secondary)
                                     }
                                 }
                             }.buttonStyle(.plain)
@@ -165,6 +173,8 @@ struct CalendarScreen: View {
             }.padding(26)
         }.background(Color.primary.opacity(0.025))
             .onChange(of: month) { _, value in if !day.hasPrefix(value) { day = value + "-01" } }
+            .onAppear { store.contextDate = day }
+            .onChange(of: day) { _, value in store.contextDate = value }
     }
 }
 struct TimelineScreen: View {
@@ -190,6 +200,8 @@ struct TimelineScreen: View {
                 }
             }.padding(26)
         }.background(Color.primary.opacity(0.025))
+            .onAppear { store.contextDate = min(end, JournalDate.today()) }
+            .onChange(of: end) { _, value in store.contextDate = min(value, JournalDate.today()) }
     }
 }
 struct YearNavigation: View {
@@ -234,21 +246,31 @@ struct ActivityHeatmap: View {
 struct ActivitiesScreen: View {
     @ObservedObject var store: JournalStore
     @State private var year = Int(JournalDate.today().prefix(4))!
+    @State private var showArchived = false
+    private var activities: [Activity] { showArchived ? store.snapshot.activities : store.snapshot.activeActivities }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 ScreenHeading(title: "持续发生的小事", subtitle: "每一行，都是生活里的一份积累。")
-                HStack { Text("\(store.snapshot.activities.count) 项活动").foregroundStyle(.secondary); Spacer(); YearNavigation(year: $year) }
-                if store.snapshot.activities.isEmpty { ContentUnavailableView("还没有活动定义", systemImage: "square.grid.2x2", description: Text("在日记库的 activities 文件夹添加活动 Markdown 文件，然后刷新。")) }
-                ForEach(store.snapshot.activities) { activity in
+                HStack { Text("\(activities.count) 项活动").foregroundStyle(.secondary); Spacer(); Button("新建活动", systemImage: "plus") { store.newActivity() }; YearNavigation(year: $year) }
+                if !store.snapshot.archivedActivityIDs.isEmpty { Toggle("显示已归档活动", isOn: $showArchived).font(.callout) }
+                if activities.isEmpty {
+                    ContentUnavailableView { Label("还没有活动", systemImage: "square.grid.2x2") } description: { Text("创建你想记录的活动，可以选择时长、距离或页数。") } actions: { Button("新建活动") { store.newActivity() } }
+                }
+                ForEach(activities) { activity in
                     let entries = store.snapshot.entries.filter { $0.activityID == activity.id && $0.date.hasPrefix(String(year)) }
                     Paper {
                         VStack(alignment: .leading, spacing: 18) {
                             HStack {
                                 Button { openActivity(activity) } label: { Text("\(activity.icon)  \(activity.name)").font(.title3.bold()) }.buttonStyle(.plain)
+                                if store.snapshot.archivedActivityIDs.contains(activity.id) { Text("已归档").font(.caption).foregroundStyle(.secondary) }
                                 Spacer(); Text("\(Summary(entries).count) 次 · \(Summary(entries).days) 天").foregroundStyle(.secondary)
+                                ActivityActions(store: store, activity: activity)
                             }
-                            ActivityHeatmap(year: year, entries: entries, color: Color(hex: activity.color))
+                            ActivityHeatmap(year: year, entries: entries, color: Color(hex: activity.color)) { value in
+                                store.activityFocusMonth = String(value.prefix(7)); store.activityFocusDay = value
+                                store.selection = "activity:" + activity.id
+                            }
                             Text(entries.map(\.date).max().map { "最近记录 " + $0 } ?? "这一年还没有记录").font(.caption).foregroundStyle(.secondary)
                             Button("查看记录与统计 →") { openActivity(activity) }.buttonStyle(.link)
                         }
@@ -259,19 +281,20 @@ struct ActivitiesScreen: View {
     }
     private func openActivity(_ activity: Activity) {
         store.activityFocusMonth = String(format: "%04d", year) + String(JournalDate.today().dropFirst(4).prefix(3))
+        store.activityFocusDay = nil
         store.selection = "activity:" + activity.id
     }
 }
 struct ActivityScreen: View {
     @ObservedObject var store: JournalStore
     let activity: Activity
-    @State private var year = Int(JournalDate.today().prefix(4))!
     @State private var month = String(JournalDate.today().prefix(7))
     @State private var day: String?
+    private var year: Int { Int(month.prefix(4))! }
     init(store: JournalStore, activity: Activity) {
         self.store = store; self.activity = activity
-        _year = State(initialValue: Int(store.activityFocusMonth.prefix(4))!)
         _month = State(initialValue: store.activityFocusMonth)
+        _day = State(initialValue: store.activityFocusDay)
     }
     var body: some View {
         let all = store.snapshot.entries.filter { $0.activityID == activity.id }
@@ -279,7 +302,12 @@ struct ActivityScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 ScreenHeading(title: "\(activity.icon)  \(activity.name)", subtitle: activity.body.trimmingCharacters(in: .whitespacesAndNewlines))
-                HStack { YearNavigation(year: $year); Spacer(); Button("记录\(activity.name)", systemImage: "plus") { store.newEntry(activity: activity.id) } }
+                HStack {
+                    YearNavigation(year: Binding(get: { year }, set: { month = String(format: "%04d", $0) + String(month.suffix(3)); day = nil })); Spacer()
+                    if store.snapshot.archivedActivityIDs.contains(activity.id) { Text("已归档 · 历史已保留").font(.caption).foregroundStyle(.secondary) }
+                    else { Button(day == nil ? "记录今天的\(activity.name)" : "为所选日期记录", systemImage: "plus") { store.newEntry(date: day ?? JournalDate.today(), activity: activity.id) }.disabled((day ?? JournalDate.today()) > JournalDate.today()) }
+                    ActivityActions(store: store, activity: activity)
+                }
                 Paper {
                     VStack(alignment: .leading, spacing: 22) {
                         StatsStrip(entries: annual, metrics: activity.metrics)
@@ -297,7 +325,9 @@ struct ActivityScreen: View {
                 Paper {
                     VStack(alignment: .leading, spacing: 18) {
                         Text("\(String(year)) 年 · 统计").font(.headline)
-                        Text("平均时长 \(numberLabel(Summary(annual).averageDuration)) min · \(Summary(annual).samples[.duration] ?? 0) 个有效样本").font(.caption).foregroundStyle(.secondary)
+                        if activity.metrics.contains(.duration) {
+                            Text("平均时长 \(numberLabel(Summary(annual).averageDuration)) min · \(Summary(annual).samples[.duration] ?? 0) 个有效样本").font(.caption).foregroundStyle(.secondary)
+                        }
                         Text("每月活动次数").font(.subheadline)
                         Chart(1...12, id: \.self) { m in
                             BarMark(x: .value("月份", "\(m)月"), y: .value("次数", annual.filter { Int($0.date.dropFirst(5).prefix(2)) == m }.count)).foregroundStyle(Color(hex: activity.color))
@@ -310,36 +340,73 @@ struct ActivityScreen: View {
                 }
             }.padding(26)
         }.background(Color.primary.opacity(0.025))
-            .onChange(of: year) { _, value in month = String(format: "%04d", value) + String(month.suffix(3)); day = nil }
-            .onChange(of: month) { _, _ in if let selected = day, !selected.hasPrefix(month) { day = nil } }
+            .onChange(of: month) { _, value in
+                if let selected = day, !selected.hasPrefix(value) { day = nil }
+            }
+            .onAppear { store.contextDate = day ?? JournalDate.today(); store.activityFocusDay = nil }
+            .onChange(of: day) { _, value in store.contextDate = value ?? JournalDate.today() }
     }
 }
 struct HistoryScreen: View {
     @ObservedObject var store: JournalStore
     let search: Bool
-    @State private var filter = "all"
+    @State private var filter = EntryFilter()
+    @State private var dateRange = false
+    @State private var start = JournalDate.shift(JournalDate.today(), days: -30)
+    @State private var end = JournalDate.today()
+    @FocusState private var searchFocused: Bool
     var body: some View {
-        let query = store.query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let entries = store.snapshot.entries.filter { entry in
-            (filter == "all" || entry.kind == filter) && (!search || !query.isEmpty && ([entry.title, entry.body] + (entry.tags ?? [])).joined(separator: "\n").localizedCaseInsensitiveContains(query))
-        }
+        let entries = results
         let groups = Dictionary(grouping: entries, by: \.date)
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                ScreenHeading(title: search ? "找回一个片段" : "全部记录", subtitle: search ? "搜索标题、正文和标签。" : "每一条记录，都有属于它的位置。")
+                ScreenHeading(title: search ? "找回一个片段" : "全部记录", subtitle: search ? "搜索标题、正文、标签和活动名称；可以结合筛选。" : "按活动、标签和日期找到你想回顾的记录。")
                 if search {
-                    HStack { Image(systemName: "magnifyingglass").foregroundStyle(.secondary); TextField("试试：公园、阅读，或某个想法…", text: $store.query).textFieldStyle(.plain) }.padding(12).background(.background, in: RoundedRectangle(cornerRadius: 10))
+                    HStack { Image(systemName: "magnifyingglass").foregroundStyle(.secondary); TextField("试试：跑步、阅读，或某个想法…", text: $store.query).textFieldStyle(.plain).focused($searchFocused) }.padding(12).background(.background, in: RoundedRectangle(cornerRadius: 10))
                 }
                 HStack {
                     Text("\(entries.count) 条记录").foregroundStyle(.secondary)
                     Spacer()
-                    Picker("类型", selection: $filter) { Text("全部").tag("all"); Text("日记").tag("journal"); Text("活动").tag("event") }.pickerStyle(.segmented).frame(width: 200)
+                    Picker("类型", selection: $filter.kind) { Text("全部").tag("all"); Text("日记").tag("journal"); Text("活动").tag("event") }.pickerStyle(.segmented).frame(width: 200)
                 }
-                if groups.isEmpty { ContentUnavailableView(search ? "没有匹配记录" : "还没有记录", systemImage: search ? "magnifyingglass" : "book", description: Text(search && query.isEmpty ? "输入关键词开始搜索。" : "换个关键词，或写下今天的第一条记录。")) }
+                filterControls
+                if groups.isEmpty { ContentUnavailableView("没有匹配记录", systemImage: search ? "magnifyingglass" : "book", description: Text("调整筛选条件，或添加一条记录。")) }
                 ForEach(groups.keys.sorted(by: >), id: \.self) { day in
                     Paper { VStack(alignment: .leading, spacing: 12) { Text(day).font(.headline); EntryRows(store: store, entries: groups[day]!) } }
                 }
             }.padding(26)
         }.background(Color.primary.opacity(0.025))
+            .onAppear { if search { searchFocused = true } }
+    }
+    private var results: [Entry] {
+        var value = filter
+        value.query = search ? store.query : ""
+        if dateRange { value.start = start; value.end = end }
+        return store.snapshot.entries.filter { value.matches($0, activities: store.snapshot.activities) }
+    }
+    private var filterControls: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Picker("活动", selection: $filter.activityID) {
+                    Text("所有活动与日记").tag(Optional<String>.none)
+                    ForEach(store.snapshot.activities) { Text($0.icon + " " + $0.name).tag(Optional($0.id)) }
+                }.frame(maxWidth: 250)
+                Picker("标签", selection: $filter.tag) {
+                    Text("所有标签").tag(Optional<String>.none)
+                    ForEach(Array(Set(store.snapshot.entries.flatMap { $0.tags ?? [] })).sorted(), id: \.self) { Text($0).tag(Optional($0)) }
+                }.frame(maxWidth: 200)
+                Spacer()
+                Button("清除筛选") { filter = EntryFilter(); dateRange = false; if search { store.query = "" } }
+            }
+            HStack {
+                Toggle("限制日期", isOn: $dateRange).toggleStyle(.checkbox)
+                if dateRange {
+                    DatePicker("从", selection: Binding(get: { JournalDate.parse(start)! }, set: { start = JournalDate.today($0) }), in: ...Date(), displayedComponents: .date)
+                    DatePicker("到", selection: Binding(get: { JournalDate.parse(end)! }, set: { end = JournalDate.today($0) }), in: ...Date(), displayedComponents: .date)
+                }
+                Spacer()
+            }.environment(\.timeZone, JournalDate.calendar.timeZone).environment(\.calendar, JournalDate.calendar)
+            if dateRange && start > end { Text("开始日期不能晚于结束日期").font(.caption).foregroundStyle(.orange) }
+        }.padding(14).background(.background, in: RoundedRectangle(cornerRadius: 10))
     }
 }

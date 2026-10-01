@@ -79,7 +79,7 @@ public enum MarkdownCodec {
         let keys = try strings(map["metrics"], "metrics")
         let metrics = try keys.map { key -> Metric in guard let metric = Metric(rawValue: key) else { throw JournalError("未知指标：\(key)") }; return metric }
         guard Set(metrics).count == metrics.count else { throw JournalError("指标不能重复") }
-        return Activity(id: id, name: name, icon: icon, color: color, metrics: metrics, body: body)
+        return Activity(id: id, name: name, icon: icon, color: color, metrics: metrics, body: body, hash: hash(text))
     }
     public static func entry(_ text: String, activities: [Activity], now: Date = Date()) throws -> Entry {
         let (map, body) = try decode(text)

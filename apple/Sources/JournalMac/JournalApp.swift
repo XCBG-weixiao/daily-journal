@@ -10,7 +10,7 @@ struct JournalApp: App {
     var body: some Scene {
         Window("日常", id: "journal") {
             JournalRoot(store: store)
-                .frame(minWidth: 1060, minHeight: 680)
+                .frame(minWidth: 900, minHeight: 600)
                 .tint(Color(hex: "#3D8060"))
                 .task { delegate.store = store; await store.restore() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await store.refresh() } } }
@@ -18,13 +18,17 @@ struct JournalApp: App {
         .defaultSize(width: 1340, height: 880)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("新建记录") { store.newEntry() }.keyboardShortcut("n").disabled(!store.loaded || store.editing != nil)
-                Button("打开日记库…") { store.choose(create: false) }.keyboardShortcut("o").disabled(store.editing != nil)
-                Button("新建日记库…") { store.choose(create: true) }.disabled(store.editing != nil)
+                Button("新建记录") { store.newEntry() }.keyboardShortcut("n").disabled(!store.loaded || store.hasEditor)
+                Button("新建活动…") { store.newActivity() }.keyboardShortcut("n", modifiers: [.command, .shift]).disabled(!store.loaded || store.hasEditor)
+                Button("打开日记库…") { store.choose(create: false) }.keyboardShortcut("o").disabled(store.hasEditor)
+                Button("新建日记库…") { store.choose(create: true) }.disabled(store.hasEditor)
             }
             CommandGroup(after: .newItem) {
                 Button("刷新日记库") { Task { await store.refresh() } }.keyboardShortcut("r").disabled(store.busy)
                 Button("在 Finder 中显示日记库") { store.reveal() }
+            }
+            CommandGroup(after: .textEditing) {
+                Button("搜索记录") { store.selection = "search" }.keyboardShortcut("f", modifiers: [.command, .shift]).disabled(!store.loaded || store.hasEditor)
             }
         }
     }
@@ -34,9 +38,18 @@ struct JournalApp: App {
 final class JournalAppDelegate: NSObject, NSApplicationDelegate {
     weak var store: JournalStore?
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard store?.editing != nil else { return .terminateNow }
-        let alert = NSAlert(); alert.messageText = "正在编辑记录"
-        alert.informativeText = "退出会丢弃尚未保存的编辑内容。"
+        if store?.busy == true { return .terminateCancel }
+        if store?.editing != nil {
+            do { try store?.flushDraft(); return .terminateNow }
+            catch {
+                let alert = NSAlert(); alert.messageText = "草稿未能保存"
+                alert.informativeText = error.localizedDescription; alert.addButton(withTitle: "返回编辑")
+                alert.runModal(); return .terminateCancel
+            }
+        }
+        guard store?.activityEditing != nil else { return .terminateNow }
+        let alert = NSAlert(); alert.messageText = "正在编辑活动"
+        alert.informativeText = "退出会丢弃尚未保存的活动设置。"
         alert.addButton(withTitle: "继续编辑"); alert.addButton(withTitle: "丢弃并退出")
         return alert.runModal() == .alertSecondButtonReturn ? .terminateNow : .terminateCancel
     }
@@ -68,10 +81,22 @@ struct JournalRoot: View {
                         Label("活动", systemImage: "square.grid.2x2").tag("activities")
                         Label("全部记录", systemImage: "books.vertical").tag("history")
                         Label("搜索", systemImage: "magnifyingglass").tag("search")
+                        Label("本机草稿 · \(store.drafts.count)", systemImage: "doc.badge.clock").tag("drafts")
+                        Label("回收站 · \(store.snapshot.trash.count)", systemImage: "trash").tag("trash")
                     }
                     Section("我的活动") {
-                        ForEach(store.snapshot.activities) { activity in
+                        ForEach(store.snapshot.activeActivities) { activity in
                             Text("\(activity.icon)  \(activity.name)").tag("activity:" + activity.id)
+                                .contextMenu { ActivityActions(store: store, activity: activity) }
+                        }
+                        Button("新建活动", systemImage: "plus") { store.newActivity() }.disabled(!store.loaded || store.busy)
+                    }
+                    if !store.snapshot.archivedActivityIDs.isEmpty {
+                        Section("已归档") {
+                            ForEach(store.snapshot.activities.filter { store.snapshot.archivedActivityIDs.contains($0.id) }) { activity in
+                                Text("\(activity.icon)  \(activity.name)").foregroundStyle(.secondary).tag("activity:" + activity.id)
+                                    .contextMenu { ActivityActions(store: store, activity: activity) }
+                            }
                         }
                     }
                 }.listStyle(.sidebar)
@@ -119,45 +144,91 @@ struct JournalRoot: View {
                         Menu {
                             Button("在 Finder 中显示日记库") { store.reveal() }
                             Button("下载 iCloud 文件") { Task { await store.download() } }
+                            Button("清理未使用图片…") { store.showImageCleanup = true }.disabled(store.busy)
                             Button("新建日记库…") { store.choose(create: true) }
                         } label: { Label("日记库", systemImage: "folder") }
                         Button("新建记录", systemImage: "square.and.pencil") { store.newEntry() }.disabled(store.busy)
+                        Menu {
+                            Button("写日记") { store.newEntry(kind: "journal") }
+                            Button("记录活动…") { store.newEntry(kind: "event") }
+                            Divider()
+                            Button("新建活动…") { store.newActivity() }
+                        } label: { Image(systemName: "chevron.down") }.disabled(store.busy)
                     }
                 }
             }
         }
         .sheet(item: $store.editing) { entry in EntryEditor(store: store, entry: entry) }
+        .sheet(item: $store.activityEditing) { request in ActivityEditor(store: store, request: request) }
+        .sheet(isPresented: $store.showImageCleanup) { ImageCleanupScreen(store: store) }
+        .confirmationDialog("删除记录后可以在回收站恢复", isPresented: Binding(get: { store.deletingEntry != nil }, set: { if !$0 { store.deletingEntry = nil } }), titleVisibility: .visible) {
+            if let entry = store.deletingEntry {
+                Button("将“\(entry.title)”移入回收站", role: .destructive) { Task { await store.trash(entry) }; store.deletingEntry = nil }
+            }
+            Button("取消", role: .cancel) { store.deletingEntry = nil }
+        }
+        .confirmationDialog(activityDeletionMessage, isPresented: Binding(get: { store.deletingActivity != nil }, set: { if !$0 { store.deletingActivity = nil } }), titleVisibility: .visible) {
+            if let activity = store.deletingActivity {
+                let count = store.snapshot.entries.filter { $0.activityID == activity.id }.count
+                if count > 0 { Button("归档活动，保留历史") { Task { await store.setArchived(activity, true) }; store.deletingActivity = nil } }
+                Button(count == 0 ? "将活动移入回收站" : "将活动和 \(count) 条记录移入回收站", role: .destructive) {
+                    Task { await store.trash(activity) }; store.deletingActivity = nil
+                }
+            }
+            Button("取消", role: .cancel) { store.deletingActivity = nil }
+        }
         .sheet(isPresented: $showIssues) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("文件问题").font(.title2.bold())
                 Text("以下文件未计入视图和统计。请修正原文件后刷新，不会自动改写原文件。")
                 List(store.snapshot.issues) { issue in
-                    VStack(alignment: .leading, spacing: 6) { Text(issue.file).bold(); Text(issue.message).foregroundStyle(.secondary) }.textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(issue.file).bold(); Text(issue.message).foregroundStyle(.secondary)
+                        Button("在 Finder 中查看") { store.revealIssue(issue) }
+                    }.textSelection(.enabled)
                 }
                 HStack { Spacer(); Button("完成") { showIssues = false }.keyboardShortcut(.defaultAction) }
             }.padding(24).frame(width: 640, height: 430)
         }
         .onChange(of: store.selection) { _, _ in store.selectedEntry = nil }
     }
+    private var activityDeletionMessage: String {
+        guard let activity = store.deletingActivity else { return "删除活动" }
+        let count = store.snapshot.entries.filter { $0.activityID == activity.id }.count
+        return count == 0 ? "将“\(activity.name)”移入回收站？" : "“\(activity.name)”有 \(count) 条历史记录。归档可保留历史；一起删除后可在回收站恢复。"
+    }
     private var workspace: some View {
-        HSplitView {
-            Group {
+        GeometryReader { geometry in
+            if geometry.size.width >= 850 {
+                HSplitView {
+                    screen.frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
+                    if let entry = readingEntry {
+                        EntryReader(store: store, entry: entry).frame(minWidth: 300, idealWidth: 400, maxWidth: 540, maxHeight: .infinity)
+                    }
+                }
+            } else {
+                ZStack {
+                    screen.opacity(readingEntry == nil ? 1 : 0).allowsHitTesting(readingEntry == nil)
+                    if let entry = readingEntry { EntryReader(store: store, entry: entry).background(Color(nsColor: .windowBackgroundColor)) }
+                }
+            }
+        }
+    }
+    private var readingEntry: Entry? { store.snapshot.entries.first { $0.id == store.selectedEntry } }
+    @ViewBuilder private var screen: some View {
                 switch store.selection {
                 case "calendar": CalendarScreen(store: store)
                 case "timeline": TimelineScreen(store: store)
                 case "activities": ActivitiesScreen(store: store)
                 case "history": HistoryScreen(store: store, search: false)
                 case "search": HistoryScreen(store: store, search: true)
+                case "trash": TrashScreen(store: store)
+                case "drafts": DraftsScreen(store: store)
                 default:
                     if let activity = store.snapshot.activities.first(where: { store.selection == "activity:" + $0.id }) {
                         ActivityScreen(store: store, activity: activity).id(activity.id + store.activityFocusMonth)
                     } else { ContentUnavailableView("活动不存在", systemImage: "folder.badge.questionmark") }
                 }
-            }.frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
-            if let id = store.selectedEntry, let entry = store.snapshot.entries.first(where: { $0.id == id }) {
-                EntryReader(store: store, entry: entry).frame(minWidth: 300, idealWidth: 400, maxWidth: 540, maxHeight: .infinity)
-            }
-        }
     }
     private var welcome: some View {
         VStack(spacing: 22) {

@@ -5,6 +5,11 @@ public struct JournalError: LocalizedError, Sendable {
     public init(_ message: String) { self.message = message }
     public var errorDescription: String? { message }
 }
+public struct JournalConflict: LocalizedError, Sendable {
+    public let message: String
+    public init(_ message: String) { self.message = message }
+    public var errorDescription: String? { message }
+}
 
 public enum Metric: String, CaseIterable, Codable, Sendable {
     case duration = "duration_min", distance = "distance_km", pages
@@ -19,8 +24,10 @@ public struct Activity: Identifiable, Equatable, Sendable {
     public let color: String
     public let metrics: [Metric]
     public let body: String
-    public init(id: String, name: String, icon: String, color: String, metrics: [Metric], body: String = "") {
+    public var hash: String?
+    public init(id: String, name: String, icon: String, color: String, metrics: [Metric], body: String = "", hash: String? = nil) {
         self.id = id; self.name = name; self.icon = icon; self.color = color; self.metrics = metrics; self.body = body
+        self.hash = hash
     }
     public static let defaults: [Activity] = [
         Activity(id: "running", name: "跑步", icon: "🏃", color: "#3D8060", metrics: [.duration, .distance]),
@@ -29,7 +36,7 @@ public struct Activity: Identifiable, Equatable, Sendable {
     ]
 }
 
-public struct Entry: Identifiable, Equatable, Sendable {
+public struct Entry: Identifiable, Equatable, Codable, Sendable {
     public var id: String
     public var kind: String
     public var title: String
@@ -58,8 +65,67 @@ public struct JournalSnapshot: Sendable {
     public var activities: [Activity] = []
     public var entries: [Entry] = []
     public var issues: [ContentIssue] = []
+    public var archivedActivityIDs: Set<String> = []
+    public var trash: [TrashItem] = []
+    public var activeActivities: [Activity] { activities.filter { !archivedActivityIDs.contains($0.id) } }
     public var isDemo: Bool { entries.contains { $0.tags?.contains("示例") == true } }
     public init() {}
+}
+
+public struct TrashItem: Identifiable, Equatable, Codable, Sendable {
+    public struct File: Equatable, Codable, Sendable {
+        public let path: String
+        public let hash: String
+        public init(path: String, hash: String) { self.path = path; self.hash = hash }
+    }
+    public let schemaVersion: Int
+    public let id: String
+    public let title: String
+    public let kind: String
+    public let deletedAt: Date
+    public let files: [File]
+    public var recordCount: Int { files.filter { $0.path.hasPrefix("entries/") }.count }
+    public init(id: String = UUID().uuidString.lowercased(), title: String, kind: String, deletedAt: Date = Date(), files: [File]) {
+        self.schemaVersion = 1; self.id = id; self.title = title; self.kind = kind; self.deletedAt = deletedAt; self.files = files
+    }
+}
+
+public struct EntryFilter: Sendable {
+    public var query = ""
+    public var kind = "all"
+    public var activityID: String?
+    public var start: String?
+    public var end: String?
+    public var tag: String?
+    public init() {}
+    public func matches(_ entry: Entry, activities: [Activity]) -> Bool {
+        guard kind == "all" || entry.kind == kind,
+              activityID == nil || entry.activityID == activityID,
+              start == nil || entry.date >= start!, end == nil || entry.date <= end!,
+              tag == nil || entry.tags?.contains(tag!) == true else { return false }
+        let words = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if words.isEmpty { return true }
+        let activityName = activities.first { $0.id == entry.activityID }?.name ?? ""
+        return ([entry.title, entry.body, activityName] + (entry.tags ?? [])).joined(separator: "\n").localizedCaseInsensitiveContains(words)
+    }
+}
+
+public enum JournalText {
+    public static func imageReferences(_ body: String) -> [String] {
+        let pattern = "!\\[[^\\]]*\\]\\((\\.\\./assets/[^\\s)]+)(?:\\s+\"[^\"]*\")?\\)"
+        let regex = try! NSRegularExpression(pattern: pattern)
+        let text = body as NSString
+        return Array(Set(regex.matches(in: body, range: NSRange(location: 0, length: text.length)).map { text.substring(with: $0.range(at: 1)) })).sorted()
+    }
+    public static func excerpt(_ body: String) -> String {
+        body.replacingOccurrences(of: "!\\[[^\\]]*\\]\\([^)]*\\)", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "[#>*`\\[\\]]", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    public static func removingImage(_ reference: String, from body: String) -> String {
+        let target = NSRegularExpression.escapedPattern(for: reference)
+        return body.replacingOccurrences(of: "!\\[[^\\]]*\\]\\(\(target)(?:\\s+\"[^\"]*\")?\\)", with: "", options: .regularExpression)
+    }
 }
 
 public enum JournalDate {

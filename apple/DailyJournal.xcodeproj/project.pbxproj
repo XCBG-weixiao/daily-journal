@@ -5,6 +5,26 @@
 	"objectVersion" = "56";
 	"archiveVersion" = "1";
 	"objects" = {
+		"19065CF748244B379DEF9B35" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/TextEditor.swift";
+			"sourceTree" = "<group>";
+		};
+		"928039A016F74BE89747B4F4" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "19065CF748244B379DEF9B35";
+		};
+		"36AC0AEDEB94499FC14EEBAF" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/JournalManagementViews.swift";
+			"sourceTree" = "<group>";
+		};
+		"55F2F6365F5F4F1FBF650792" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "36AC0AEDEB94499FC14EEBAF";
+		};
 		"26B7DF298B1CB9F5BD7809B6" = {
 			"isa" = "PBXFileReference";
 			"explicitFileType" = "wrapper.application";
@@ -102,6 +122,8 @@
 			"isa" = "PBXGroup";
 			"name" = "Mac 日记应用";
 			"children" = (
+				"19065CF748244B379DEF9B35",
+				"36AC0AEDEB94499FC14EEBAF",
 				"54D88AF96CFBD85E62134CE3",
 				"F2ED9477FF35A3FA6DD03BD4",
 				"D3CE88ED82109AA127EFF290",
@@ -131,6 +153,8 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = "2147483647";
 			"files" = (
+				"928039A016F74BE89747B4F4",
+				"55F2F6365F5F4F1FBF650792",
 				"00CFAFF65D99DC64B4875DEF",
 				"280417C7492A6B47F52998F4",
 				"EDADBB1239B90206390225D7",

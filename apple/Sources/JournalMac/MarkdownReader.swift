@@ -83,7 +83,10 @@ struct EntryReader: View {
             HStack {
                 Button("关闭阅读", systemImage: "xmark") { store.selectedEntry = nil }.labelStyle(.iconOnly).buttonStyle(.borderless)
                 Spacer()
-                Button("编辑", systemImage: "pencil") { store.editing = entry }.disabled(store.busy)
+                Button("编辑", systemImage: "pencil") { store.editEntry(entry) }.disabled(store.busy)
+                Menu {
+                    Button("移入回收站…", systemImage: "trash", role: .destructive) { store.deletingEntry = entry }
+                } label: { Image(systemName: "ellipsis.circle") }.disabled(store.busy)
             }.padding(18)
             Divider()
             ScrollView {
@@ -95,7 +98,9 @@ struct EntryReader: View {
                     if let metrics = entry.metrics, !metrics.isEmpty {
                         HStack { ForEach(Metric.allCases, id: \.self) { metric in if let value = metrics[metric] { MetricTile(title: metric.title, value: numberLabel(value) + " " + metric.unit) } } }
                     }
-                    if let tags = entry.tags, !tags.isEmpty { Text(tags.map { "#" + $0 }.joined(separator: "  ")).font(.caption).foregroundStyle(Color.journalGreen) }
+                    if let tags = entry.tags, !tags.isEmpty {
+                        HStack { ForEach(tags, id: \.self) { tag in Button("#" + tag) { store.query = tag; store.selection = "search" }.buttonStyle(.link) } }.font(.caption)
+                    }
                     Divider()
                     if let repository = store.repository {
                         if let cover = entry.cover { JournalImage(repository: repository, url: URL(string: cover, relativeTo: JournalMarkdown.imageBase)?.absoluteURL, revision: store.revision) }

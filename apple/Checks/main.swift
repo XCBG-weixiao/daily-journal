@@ -116,4 +116,126 @@ if args.count > 3 {
     let roundtrip = try MarkdownCodec.entry(web, activities: initial.activities, now: now)
     try expect(roundtrip.title == event.title && roundtrip.metrics == event.metrics && roundtrip.body.hasSuffix(event.body), "web-written Markdown roundtrips back into native reader")
 }
+
+// Management operations use a second disposable library.
+let managedRoot = fm.temporaryDirectory.appendingPathComponent("DailyJournalManagement-" + UUID().uuidString)
+try fm.createDirectory(at: managedRoot, withIntermediateDirectories: false)
+defer { do { try fm.removeItem(at: managedRoot) } catch { fputs("Cleanup failed: \(error)\n", stderr) } }
+let managed = JournalRepository(directory: managedRoot)
+try await managed.initialize()
+let createdActivity = try await managed.saveActivity(Activity(id: "swimming", name: "游泳", icon: "🏊", color: "#3D8060", metrics: [.duration, .distance], body: "每次游泳"))
+try expect(createdActivity.hash != nil && createdActivity.id == "swimming", "activity created with schema-v1 Markdown and a hash")
+try await rejectsAsync("duplicate activity name rejected") {
+    _ = try await managed.saveActivity(Activity(id: "swimming-other", name: "游泳", icon: "🏊", color: "#3D8060", metrics: []))
+}
+try await rejectsAsync("duplicate activity ID refuses overwrite without hash") {
+    _ = try await managed.saveActivity(Activity(id: "swimming", name: "另一活动", icon: "🏊", color: "#3D8060", metrics: []))
+}
+let swimming = try await managed.save(Entry(kind: "event", title: "游泳记录", date: "2026-09-14", activityID: createdActivity.id, metrics: [.duration: 25, .distance: 0.5], body: "泳池训练"))
+let renamed = try await managed.saveActivity(Activity(id: createdActivity.id, name: "泳池训练", icon: "🏊", color: "#7963B4", metrics: createdActivity.metrics, body: createdActivity.body, hash: createdActivity.hash))
+let renamedData = try await managed.snapshot()
+try expect(renamedData.entries.count == 1 && renamedData.entries[0].activityID == renamed.id, "renaming preserves IDs and historical records")
+try await rejectsAsync("stale activity editor cannot overwrite a rename") { _ = try await managed.saveActivity(createdActivity) }
+try await rejectsAsync("cannot remove metrics used by historical records") {
+    _ = try await managed.saveActivity(Activity(id: renamed.id, name: renamed.name, icon: renamed.icon, color: renamed.color, metrics: [.duration], hash: renamed.hash))
+}
+try await managed.archiveActivity(renamed, archived: true)
+let archived = try await JournalRepository(directory: managedRoot).snapshot()
+try expect(archived.archivedActivityIDs.contains(renamed.id) && !archived.activeActivities.contains(where: { $0.id == renamed.id }) && archived.entries.count == 1, "archive persists across reopen and retains records and statistics")
+try await rejectsAsync("archived activity refuses new records at the storage boundary") {
+    _ = try await managed.save(Entry(kind: "event", title: "新记录", date: "2026-09-14", activityID: renamed.id))
+}
+let archivedEdit = try await managed.save(swimming)
+try expect(archivedEdit.hash != nil, "existing archived records remain editable")
+try await managed.archiveActivity(renamed, archived: false)
+let asyncCheck1 = try await managed.snapshot().activeActivities.contains(where: { $0.id == renamed.id })
+try expect(asyncCheck1, "unarchive restores activity picker availability")
+try await rejectsAsync("activity with records cannot be deleted as an empty category") { _ = try await managed.trashActivity(renamed, includingEntries: false) }
+let imported = try await managed.importImage(png, entryID: swimming.id)
+var pictured = swimming; pictured.body += "\n![泳池](\(imported))"; pictured.cover = imported
+let picturedSaved = try await managed.save(pictured)
+let recordTrash = try await managed.trashEntry(picturedSaved)
+let afterTrash = try await managed.snapshot()
+try expect(afterTrash.entries.isEmpty && afterTrash.trash.count == 1, "record deletion moves Markdown to visible recoverable trash")
+let asyncCheck2 = try await managed.imageData(imported) == png
+try expect(asyncCheck2, "deletion retains original images for recovery")
+let preview = try await managed.trashedEntries(recordTrash)
+try expect(preview.first?.body.hasSuffix(picturedSaved.body) == true && preview.first?.hash == picturedSaved.hash && preview.first?.metrics == picturedSaved.metrics, "trash preview preserves body and metrics")
+let asyncCheck3 = try await managed.unreferencedImages().isEmpty
+try expect(asyncCheck3, "cleanup protects images referenced by trash")
+try await rejectsAsync("metric change also protects trashed records") {
+    _ = try await managed.saveActivity(Activity(id: renamed.id, name: renamed.name, icon: renamed.icon, color: renamed.color, metrics: [.duration], hash: renamed.hash))
+}
+try await managed.restoreTrash(recordTrash)
+let restored = try await managed.snapshot()
+try expect(restored.entries.first?.hash == picturedSaved.hash && restored.trash.isEmpty, "restoration returns exact original Markdown and removes receipt")
+try await rejectsAsync("stale deletion cannot remove a modified record") { _ = try await managed.trashEntry(swimming) }
+try await managed.archiveActivity(renamed, archived: true)
+try await rejectsAsync("category deletion requires the confirmed current record set") { _ = try await managed.trashActivity(renamed, includingEntries: true) }
+let categoryTrash = try await managed.trashActivity(renamed, includingEntries: true, expectedEntries: [picturedSaved.id: picturedSaved.hash!])
+let deletedCategory = try await managed.snapshot()
+try expect(!deletedCategory.activities.contains(where: { $0.id == renamed.id }) && deletedCategory.entries.isEmpty && deletedCategory.issues.isEmpty && categoryTrash.recordCount == 1, "category deletion moves definition and all related records without orphaning history")
+try await managed.restoreTrash(categoryTrash)
+let restoredCategory = try await managed.snapshot()
+try expect(restoredCategory.activities.contains(where: { $0.id == renamed.id }) && restoredCategory.entries.count == 1 && restoredCategory.archivedActivityIDs.contains(renamed.id), "category restoration restores definition, records, archive state and images")
+let collisionTrash = try await managed.trashEntry(restoredCategory.entries[0])
+_ = try await managed.save(Entry(id: swimming.id, title: "同 ID 新记录", date: "2026-09-14"))
+try await rejectsAsync("restore refuses existing destinations without overwriting") { try await managed.restoreTrash(collisionTrash) }
+let asyncCheck4 = try await managed.trashedEntries(collisionTrash).count == 1
+try expect(asyncCheck4, "failed restoration leaves the original trash recoverable")
+try await managed.permanentlyDeleteTrash(collisionTrash)
+let asyncCheck5 = try await managed.snapshot().trash.isEmpty
+try expect(asyncCheck5, "explicit permanent deletion removes only the selected trash item")
+let orphan = try await managed.importImage(png, entryID: UUID().uuidString.lowercased())
+let unused = try await managed.unreferencedImages(protected: [imported])
+try expect(unused == [orphan], "cleanup finds orphan images while respecting local draft protection")
+let cleaned = try await managed.trashUnusedImages([orphan], protected: [imported])
+let asyncCheck6 = try await managed.trashedImageData(cleaned, path: String(orphan.dropFirst(3))) == png
+try expect(asyncCheck6, "unused images are moved to recoverable trash with unchanged bytes")
+try await managed.restoreTrash(cleaned)
+let asyncCheck7 = try await managed.imageData(orphan) == png
+try expect(asyncCheck7, "image cleanup can be undone from trash")
+let emptyActivity = try await managed.saveActivity(Activity(id: "empty-activity", name: "没有记录的活动", icon: "✨", color: "#3D8060", metrics: []))
+let emptyTrash = try await managed.trashActivity(emptyActivity, includingEntries: false)
+let emptyDeleted = try await managed.snapshot()
+try expect(emptyTrash.recordCount == 0 && !emptyDeleted.activities.contains { $0.id == emptyActivity.id }, "unused activity can be deleted without fabricating records")
+try await managed.restoreTrash(emptyTrash)
+let emptyRestored = try await managed.snapshot()
+try expect(emptyRestored.activities.contains { $0.id == emptyActivity.id && $0.metrics.isEmpty }, "empty activity restoration preserves its original definition")
+var filter = EntryFilter(); filter.query = "泳池训练"
+var searchOnlyActivity = picturedSaved; searchOnlyActivity.title = "早晨"; searchOnlyActivity.body = "完成训练"
+try expect(filter.matches(searchOnlyActivity, activities: [renamed]) && !filter.matches(searchOnlyActivity, activities: []), "search includes activity name when title and body do not contain it")
+filter.query = ""; filter.activityID = renamed.id; filter.start = "2026-09-14"; filter.end = "2026-09-14"
+try expect(filter.matches(picturedSaved, activities: [renamed]), "activity and inclusive date filters combine correctly")
+filter.end = "2026-09-13"
+try expect(!filter.matches(picturedSaved, activities: [renamed]), "date filter excludes records outside range")
+filter = EntryFilter(); filter.tag = "不存在"
+try expect(!filter.matches(picturedSaved, activities: [renamed]), "tag filter requires an exact tag")
+var draft = EditorDraft(entry: Entry(kind: "event", date: "2026-09-14", activityID: renamed.id), activities: [renamed])
+draft.values[renamed.id] = [.duration: "20", .distance: "0.75"]
+draft.activityID = "reading"; draft.values["reading"] = [.pages: "12"]
+draft.activityID = renamed.id
+let quick = try draft.candidate(activities: [renamed], now: now)
+try expect(quick.metrics?[.distance] == 0.75 && quick.title == renamed.name, "activity switches preserve input and quick records use an explicit default title")
+let cache = DraftCache(folder: managedRoot.appendingPathComponent("local-drafts"))
+try cache.save(draft)
+let recoveredDraft = try DraftCache(folder: managedRoot.appendingPathComponent("local-drafts")).all()[0]
+try expect(recoveredDraft == draft && recoveredDraft.values["reading"]?[.pages] == "12", "draft survives cache reopen with all activity inputs")
+var conflictDraft = EditorDraft(entry: picturedSaved, activities: [renamed]); conflictDraft.entry.body = "未保存正文"
+try cache.save(conflictDraft)
+let conflictCopy = conflictDraft.copyAsNew()
+try expect(conflictCopy.entry.id != conflictDraft.entry.id && conflictCopy.entry.hash == nil && conflictCopy.entry.body == conflictDraft.entry.body, "conflicting draft can be copied to a new UUID without dropping content")
+try cache.remove(draft.id)
+try expect(try cache.all().count == 1, "discard removes only the selected local draft")
+try expect(JournalText.imageReferences("![泳池](\(imported))\n![第二次](\(imported))") == [imported], "image manager deduplicates image references")
+try expect(!JournalText.removingImage(imported, from: picturedSaved.body).contains(imported), "removing image markup leaves no duplicate reference")
+try expect(JournalText.excerpt("# 今天\n![图片](\(imported))\n**训练**").contains("训练") && !JournalText.excerpt(picturedSaved.body).contains("../assets"), "record excerpts omit Markdown image syntax")
+if args.count > 2 {
+    // Export the actual managed library for the original web parser to inspect.
+    try await managed.archiveActivity(renamed, archived: false)
+    _ = try await managed.save(quick)
+    let exported = URL(fileURLWithPath: args[2]).appendingPathComponent("native-management")
+    if fm.fileExists(atPath: exported.path) { try fm.removeItem(at: exported) }
+    try fm.copyItem(at: managedRoot, to: exported)
+}
 print("\n\(passed) checks passed. Temporary fixtures only; no personal content modified.")
