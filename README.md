@@ -4,7 +4,7 @@
 
 ## Mac 与 iPhone 原生应用
 
-原生应用正在进行第一阶段的文件夹同步验证，尚未完成日记功能迁移。Xcode 工程、安装步骤和验证状态见 [Apple 应用说明](apple/README.md)。
+Mac 原生版已实现月历、时间轴、热力图、搜索、统计和图文编辑，可直接打开同一 Markdown 日记库。构建后运行 `apple/build/日常.app`；安装、构建与验证状态见 [Mac 应用说明](apple/README.md)。iPhone 版暂缓，跨设备 iCloud 同步仍待真机验证。
 
 ## 本地运行
 

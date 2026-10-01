@@ -9,6 +9,8 @@ export default defineConfig([
     "content/**",
     "work/**",
     "outputs/**",
+    "apple/.build/**",
+    "apple/build/**",
     "next-env.d.ts",
   ]),
 ]);

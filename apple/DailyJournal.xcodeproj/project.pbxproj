@@ -1,46 +1,616 @@
 // !$*UTF8*$!
 {
-	archiveVersion = 1;
-	classes = {};
-	objectVersion = 56;
-	objects = {
-		92135D54969A1053E9FFC5AB = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/ProbeApp/DailyJournalProbeApp.swift"; sourceTree = "<group>"; };
-		1595AA02BBE7039D9F0363CD = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/ProbeApp/DirectoryPresenter.swift"; sourceTree = "<group>"; };
-		1DB2CCA09891C58733622263 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/ProbeApp/ProbeSession.swift"; sourceTree = "<group>"; };
-		75B976A514C2BB581F7B4AF9 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/ProbeCore/ProbeRepository.swift"; sourceTree = "<group>"; };
-		BCE16DD0260827ECF338C787 = { isa = PBXGroup; name = Sources; sourceTree = "<group>"; children = (92135D54969A1053E9FFC5AB, 1595AA02BBE7039D9F0363CD, 1DB2CCA09891C58733622263, 75B976A514C2BB581F7B4AF9); };
-		E7B1BFA482251F04722B6837 = { isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Config/macOS.entitlements; sourceTree = "<group>"; };
-		F78A71AF8BBF8CC2F6F31354 = { isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		87032DA25FA5CED6ABFBFED2 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyJournalProbeMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F38897EA72A5AB36FC00946 = { isa = PBXBuildFile; fileRef = 92135D54969A1053E9FFC5AB; };
-		84716412659C8D0978F63B14 = { isa = PBXBuildFile; fileRef = 1595AA02BBE7039D9F0363CD; };
-		3358082BCD8CCB870DF5A4D7 = { isa = PBXBuildFile; fileRef = 1DB2CCA09891C58733622263; };
-		8718127013BDF19726D69462 = { isa = PBXBuildFile; fileRef = 75B976A514C2BB581F7B4AF9; };
-		7C78EDF33BD590A5884FE046 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (9F38897EA72A5AB36FC00946, 84716412659C8D0978F63B14, 3358082BCD8CCB870DF5A4D7, 8718127013BDF19726D69462); runOnlyForDeploymentPostprocessing = 0; };
-		B7963C781ACA479F104E7BD9 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		4A2B3ABC430C7F9000B5E266 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		3728D1857EF4959B6874E854 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = "cn.xcbg.dailyjournal.probe.mac"; SWIFT_VERSION = "5.0"; CODE_SIGN_STYLE = "Automatic"; GENERATE_INFOPLIST_FILE = "YES"; INFOPLIST_KEY_CFBundleDisplayName = "日常·同步验证"; MARKETING_VERSION = "0.1.0"; CURRENT_PROJECT_VERSION = "1"; ENABLE_USER_SCRIPT_SANDBOXING = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG"; SDKROOT = "macosx"; SUPPORTED_PLATFORMS = "macosx"; MACOSX_DEPLOYMENT_TARGET = "15.0"; CODE_SIGN_ENTITLEMENTS = "Config/macOS.entitlements"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; COMBINE_HIDPI_IMAGES = "YES"; }; name = Debug; };
-		895B92ECBA22AD5C6314FAE8 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = "cn.xcbg.dailyjournal.probe.mac"; SWIFT_VERSION = "5.0"; CODE_SIGN_STYLE = "Automatic"; GENERATE_INFOPLIST_FILE = "YES"; INFOPLIST_KEY_CFBundleDisplayName = "日常·同步验证"; MARKETING_VERSION = "0.1.0"; CURRENT_PROJECT_VERSION = "1"; ENABLE_USER_SCRIPT_SANDBOXING = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = ""; SDKROOT = "macosx"; SUPPORTED_PLATFORMS = "macosx"; MACOSX_DEPLOYMENT_TARGET = "15.0"; CODE_SIGN_ENTITLEMENTS = "Config/macOS.entitlements"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity"; COMBINE_HIDPI_IMAGES = "YES"; }; name = Release; };
-		30A4A9604327F0EFBC914DFC = { isa = XCConfigurationList; buildConfigurations = (3728D1857EF4959B6874E854, 895B92ECBA22AD5C6314FAE8); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		FEA537673C124F1035B24462 = { isa = PBXNativeTarget; buildConfigurationList = 30A4A9604327F0EFBC914DFC; buildPhases = (7C78EDF33BD590A5884FE046, B7963C781ACA479F104E7BD9, 4A2B3ABC430C7F9000B5E266); buildRules = (); dependencies = (); name = DailyJournalProbeMac; productName = DailyJournalProbeMac; productReference = 87032DA25FA5CED6ABFBFED2; productType = "com.apple.product-type.application"; };
-		0EB899A5C6C93EC13078AA57 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyJournalProbeiPhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		226BAE7CCE9ACD5EED09D720 = { isa = PBXBuildFile; fileRef = 92135D54969A1053E9FFC5AB; };
-		0FCC52F6749FF719BB7EC88F = { isa = PBXBuildFile; fileRef = 1595AA02BBE7039D9F0363CD; };
-		0C1CDB791266B0B9E671753E = { isa = PBXBuildFile; fileRef = 1DB2CCA09891C58733622263; };
-		F7EE79A60E91472FBCBDF32D = { isa = PBXBuildFile; fileRef = 75B976A514C2BB581F7B4AF9; };
-		040DE23D3585AE537DC339D2 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (226BAE7CCE9ACD5EED09D720, 0FCC52F6749FF719BB7EC88F, 0C1CDB791266B0B9E671753E, F7EE79A60E91472FBCBDF32D); runOnlyForDeploymentPostprocessing = 0; };
-		814A4AC29B67F1D9E87644EC = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		6B87980AC551A891EC7FF3CD = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		15D5F5AFE9396D5A39C0B09B = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = "cn.xcbg.dailyjournal.probe.iphone"; SWIFT_VERSION = "5.0"; CODE_SIGN_STYLE = "Automatic"; GENERATE_INFOPLIST_FILE = "YES"; INFOPLIST_KEY_CFBundleDisplayName = "日常·同步验证"; MARKETING_VERSION = "0.1.0"; CURRENT_PROJECT_VERSION = "1"; ENABLE_USER_SCRIPT_SANDBOXING = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG"; SDKROOT = "iphoneos"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; IPHONEOS_DEPLOYMENT_TARGET = "18.0"; TARGETED_DEVICE_FAMILY = "1"; SUPPORTS_MACCATALYST = "NO"; INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = "YES"; INFOPLIST_KEY_UILaunchScreen_Generation = "YES"; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = "YES"; INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; }; name = Debug; };
-		B44DDAEAA5F1AD55394874D2 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = "cn.xcbg.dailyjournal.probe.iphone"; SWIFT_VERSION = "5.0"; CODE_SIGN_STYLE = "Automatic"; GENERATE_INFOPLIST_FILE = "YES"; INFOPLIST_KEY_CFBundleDisplayName = "日常·同步验证"; MARKETING_VERSION = "0.1.0"; CURRENT_PROJECT_VERSION = "1"; ENABLE_USER_SCRIPT_SANDBOXING = "YES"; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = ""; SDKROOT = "iphoneos"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; IPHONEOS_DEPLOYMENT_TARGET = "18.0"; TARGETED_DEVICE_FAMILY = "1"; SUPPORTS_MACCATALYST = "NO"; INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = "YES"; INFOPLIST_KEY_UILaunchScreen_Generation = "YES"; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = "YES"; INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; }; name = Release; };
-		A059DCDDA60EC82F3E6162A0 = { isa = XCConfigurationList; buildConfigurations = (15D5F5AFE9396D5A39C0B09B, B44DDAEAA5F1AD55394874D2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		FCB5A7C7C5AD1FE01EE98C88 = { isa = PBXNativeTarget; buildConfigurationList = A059DCDDA60EC82F3E6162A0; buildPhases = (040DE23D3585AE537DC339D2, 814A4AC29B67F1D9E87644EC, 6B87980AC551A891EC7FF3CD); buildRules = (); dependencies = (); name = DailyJournalProbeiPhone; productName = DailyJournalProbeiPhone; productReference = 0EB899A5C6C93EC13078AA57; productType = "com.apple.product-type.application"; };
-		FBDC4F23F93125BBEEAE800C = { isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (87032DA25FA5CED6ABFBFED2, 0EB899A5C6C93EC13078AA57); };
-		B28B7AF69320201D1CF206EB = { isa = PBXGroup; children = (BCE16DD0260827ECF338C787, E7B1BFA482251F04722B6837, F78A71AF8BBF8CC2F6F31354, FBDC4F23F93125BBEEAE800C); sourceTree = "<group>"; };
-		89E1FD6268CC0F221A2BE178 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; }; name = Debug; };
-		E6DE6C99132752C914FEF632 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; }; name = Release; };
-		862894B703A6DEDF96A9DD6C = { isa = XCConfigurationList; buildConfigurations = (89E1FD6268CC0F221A2BE178, E6DE6C99132752C914FEF632); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		98F54143AB4E86B28C3AFEE0 = { isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; }; buildConfigurationList = 862894B703A6DEDF96A9DD6C; compatibilityVersion = "Xcode 14.0"; developmentRegion = "zh-Hans"; hasScannedForEncodings = 0; knownRegions = ("zh-Hans", en, Base); mainGroup = B28B7AF69320201D1CF206EB; productRefGroup = FBDC4F23F93125BBEEAE800C; projectDirPath = ""; projectRoot = ""; targets = (FEA537673C124F1035B24462, FCB5A7C7C5AD1FE01EE98C88); };
+	"classes" = {
 	};
-	rootObject = 98F54143AB4E86B28C3AFEE0;
+	"objectVersion" = "56";
+	"archiveVersion" = "1";
+	"objects" = {
+		"26B7DF298B1CB9F5BD7809B6" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"includeInIndex" = "0";
+			"path" = "日常.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"89E1FD6268CC0F221A2BE178" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+			};
+			"name" = "Debug";
+		};
+		"E6DE6C99132752C914FEF632" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CLANG_ENABLE_MODULES" = "YES";
+			};
+			"name" = "Release";
+		};
+		"862894B703A6DEDF96A9DD6C" = {
+			"isa" = "XCConfigurationList";
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+			"buildConfigurations" = (
+				"89E1FD6268CC0F221A2BE178",
+				"E6DE6C99132752C914FEF632",
+			);
+		};
+		"84716412659C8D0978F63B14" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1595AA02BBE7039D9F0363CD";
+		};
+		"480390C9962681A12E16C90B" = {
+			"isa" = "XCLocalSwiftPackageReference";
+			"relativePath" = ".";
+		};
+		"814A4AC29B67F1D9E87644EC" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"9E883AB281B610233FFC49A2" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B9A25C5031158B42C02B4BC1";
+		};
+		"0C1CDB791266B0B9E671753E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1DB2CCA09891C58733622263";
+		};
+		"92135D54969A1053E9FFC5AB" = {
+			"path" = "Sources/ProbeApp/DailyJournalProbeApp.swift";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"D3ECE8423F4181E55BED6D7B" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "日常";
+				"EXECUTABLE_NAME" = "DailyJournal";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.mac";
+				"SDKROOT" = "macosx";
+				"SUPPORTED_PLATFORMS" = "macosx";
+				"MACOSX_DEPLOYMENT_TARGET" = "15.0";
+				"SWIFT_VERSION" = "5.0";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"CODE_SIGN_IDENTITY" = "-";
+				"CODE_SIGN_ENTITLEMENTS" = "Config/macOS.entitlements";
+				"INFOPLIST_FILE" = "Config/JournalInfo.plist";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
+			};
+		};
+		"B28B7AF69320201D1CF206EB" = {
+			"isa" = "PBXGroup";
+			"sourceTree" = "<group>";
+			"children" = (
+				"BCE16DD0260827ECF338C787",
+				"E7B1BFA482251F04722B6837",
+				"F78A71AF8BBF8CC2F6F31354",
+				"FBDC4F23F93125BBEEAE800C",
+				"60FDAD13D4B232756B9C3B05",
+			);
+		};
+		"60FDAD13D4B232756B9C3B05" = {
+			"isa" = "PBXGroup";
+			"name" = "Mac 日记应用";
+			"children" = (
+				"54D88AF96CFBD85E62134CE3",
+				"F2ED9477FF35A3FA6DD03BD4",
+				"D3CE88ED82109AA127EFF290",
+				"B90B9BD02326AFD06197D968",
+				"B9A25C5031158B42C02B4BC1",
+				"8C96635B22EF75B4D8B82C33",
+				"F89B347B1B62BADA9562D8D1",
+				"96995F06D4D81676E53E1810",
+				"5AE0009ACDA9435977A14885",
+			);
+			"sourceTree" = "<group>";
+		};
+		"6B87980AC551A891EC7FF3CD" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"1595AA02BBE7039D9F0363CD" = {
+			"path" = "Sources/ProbeApp/DirectoryPresenter.swift";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"F1FB287726336B67042E2929" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"00CFAFF65D99DC64B4875DEF",
+				"280417C7492A6B47F52998F4",
+				"EDADBB1239B90206390225D7",
+				"962AFF0BA474E508ADEC0EE0",
+				"9E883AB281B610233FFC49A2",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"511AAC3A6F94A67D5AD36221" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"PRODUCT_NAME" = "日常";
+				"EXECUTABLE_NAME" = "DailyJournal";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.mac";
+				"SDKROOT" = "macosx";
+				"SUPPORTED_PLATFORMS" = "macosx";
+				"MACOSX_DEPLOYMENT_TARGET" = "15.0";
+				"SWIFT_VERSION" = "5.0";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"CODE_SIGN_IDENTITY" = "-";
+				"CODE_SIGN_ENTITLEMENTS" = "Config/macOS.entitlements";
+				"INFOPLIST_FILE" = "Config/JournalInfo.plist";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
+			};
+		};
+		"CD2C46354B50CDF56D9BCD8D" = {
+			"isa" = "PBXNativeTarget";
+			"name" = "DailyJournalMac";
+			"productName" = "日常";
+			"productType" = "com.apple.product-type.application";
+			"productReference" = "26B7DF298B1CB9F5BD7809B6";
+			"buildConfigurationList" = "F88CE033F37BAE480298827A";
+			"buildPhases" = (
+				"F1FB287726336B67042E2929",
+				"0C340966EBEC5F61C683E67B",
+				"AB7CDF37A6F360A3A99E5EB8",
+			);
+			"buildRules" = (
+			);
+			"dependencies" = (
+			);
+			"packageProductDependencies" = (
+				"4BFF067BAC3B599218E58ED9",
+				"9C678973F5A0A864DA42881A",
+			);
+		};
+		"4BFF067BAC3B599218E58ED9" = {
+			"isa" = "XCSwiftPackageProductDependency";
+			"productName" = "JournalCore";
+		};
+		"F78A71AF8BBF8CC2F6F31354" = {
+			"path" = "README.md";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "net.daringfireball.markdown";
+			"sourceTree" = "<group>";
+		};
+		"040DE23D3585AE537DC339D2" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"226BAE7CCE9ACD5EED09D720",
+				"0FCC52F6749FF719BB7EC88F",
+				"0C1CDB791266B0B9E671753E",
+				"F7EE79A60E91472FBCBDF32D",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"F88CE033F37BAE480298827A" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"511AAC3A6F94A67D5AD36221",
+				"D3ECE8423F4181E55BED6D7B",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"9C678973F5A0A864DA42881A" = {
+			"isa" = "XCSwiftPackageProductDependency";
+			"package" = "F3E5E9AFF1AF45C9A494D728";
+			"productName" = "MarkdownUI";
+		};
+		"F2ED9477FF35A3FA6DD03BD4" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/JournalApp.swift";
+			"sourceTree" = "<group>";
+		};
+		"E7B1BFA482251F04722B6837" = {
+			"path" = "Config/macOS.entitlements";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.entitlements";
+			"sourceTree" = "<group>";
+		};
+		"4A2B3ABC430C7F9000B5E266" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"0FCC52F6749FF719BB7EC88F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1595AA02BBE7039D9F0363CD";
+		};
+		"866421AF72FACB8151859B1C" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = "9C678973F5A0A864DA42881A";
+		};
+		"FBDC4F23F93125BBEEAE800C" = {
+			"isa" = "PBXGroup";
+			"name" = "Products";
+			"sourceTree" = "<group>";
+			"children" = (
+				"87032DA25FA5CED6ABFBFED2",
+				"0EB899A5C6C93EC13078AA57",
+				"26B7DF298B1CB9F5BD7809B6",
+			);
+		};
+		"1DB2CCA09891C58733622263" = {
+			"path" = "Sources/ProbeApp/ProbeSession.swift";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"B7963C781ACA479F104E7BD9" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"54D88AF96CFBD85E62134CE3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/EntryEditor.swift";
+			"sourceTree" = "<group>";
+		};
+		"280417C7492A6B47F52998F4" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F2ED9477FF35A3FA6DD03BD4";
+		};
+		"226BAE7CCE9ACD5EED09D720" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "92135D54969A1053E9FFC5AB";
+		};
+		"F7EE79A60E91472FBCBDF32D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "75B976A514C2BB581F7B4AF9";
+		};
+		"9F38897EA72A5AB36FC00946" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "92135D54969A1053E9FFC5AB";
+		};
+		"BCE16DD0260827ECF338C787" = {
+			"isa" = "PBXGroup";
+			"name" = "Sources";
+			"sourceTree" = "<group>";
+			"children" = (
+				"92135D54969A1053E9FFC5AB",
+				"1595AA02BBE7039D9F0363CD",
+				"1DB2CCA09891C58733622263",
+				"75B976A514C2BB581F7B4AF9",
+			);
+		};
+		"B90B9BD02326AFD06197D968" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/JournalStore.swift";
+			"sourceTree" = "<group>";
+		};
+		"B44DDAEAA5F1AD55394874D2" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"MARKETING_VERSION" = "0.1.0";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.probe.iphone";
+				"INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace" = "YES";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "日常·同步验证";
+				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+			};
+			"name" = "Release";
+		};
+		"B9A25C5031158B42C02B4BC1" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/MarkdownReader.swift";
+			"sourceTree" = "<group>";
+		};
+		"D3CE88ED82109AA127EFF290" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Sources/JournalMac/JournalScreens.swift";
+			"sourceTree" = "<group>";
+		};
+		"21034A78F845752411D429A3" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = "4BFF067BAC3B599218E58ED9";
+		};
+		"FCB5A7C7C5AD1FE01EE98C88" = {
+			"productType" = "com.apple.product-type.application";
+			"productReference" = "0EB899A5C6C93EC13078AA57";
+			"buildConfigurationList" = "A059DCDDA60EC82F3E6162A0";
+			"productName" = "DailyJournalProbeiPhone";
+			"isa" = "PBXNativeTarget";
+			"buildPhases" = (
+				"040DE23D3585AE537DC339D2",
+				"814A4AC29B67F1D9E87644EC",
+				"6B87980AC551A891EC7FF3CD",
+			);
+			"dependencies" = (
+			);
+			"name" = "DailyJournalProbeiPhone";
+			"buildRules" = (
+			);
+		};
+		"962AFF0BA474E508ADEC0EE0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B90B9BD02326AFD06197D968";
+		};
+		"87032DA25FA5CED6ABFBFED2" = {
+			"path" = "DailyJournalProbeMac.app";
+			"isa" = "PBXFileReference";
+			"includeInIndex" = "0";
+			"explicitFileType" = "wrapper.application";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"EDADBB1239B90206390225D7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D3CE88ED82109AA127EFF290";
+		};
+		"15D5F5AFE9396D5A39C0B09B" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"MARKETING_VERSION" = "0.1.0";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.probe.iphone";
+				"INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace" = "YES";
+				"CURRENT_PROJECT_VERSION" = "1";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "日常·同步验证";
+				"INFOPLIST_KEY_UILaunchScreen_Generation" = "YES";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
+				"SUPPORTS_MACCATALYST" = "NO";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"SDKROOT" = "iphoneos";
+				"SWIFT_VERSION" = "5.0";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "18.0";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+			};
+			"name" = "Debug";
+		};
+		"7C78EDF33BD590A5884FE046" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"9F38897EA72A5AB36FC00946",
+				"84716412659C8D0978F63B14",
+				"3358082BCD8CCB870DF5A4D7",
+				"8718127013BDF19726D69462",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"0C340966EBEC5F61C683E67B" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"21034A78F845752411D429A3",
+				"866421AF72FACB8151859B1C",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"3358082BCD8CCB870DF5A4D7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1DB2CCA09891C58733622263";
+		};
+		"AB7CDF37A6F360A3A99E5EB8" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"39D926CD13000BBC155712D7",
+				"AA86D12AC8CE223E1FB208B6",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"98F54143AB4E86B28C3AFEE0" = {
+			"buildConfigurationList" = "862894B703A6DEDF96A9DD6C";
+			"packageReferences" = (
+				"480390C9962681A12E16C90B",
+				"F3E5E9AFF1AF45C9A494D728",
+			);
+			"targets" = (
+				"FEA537673C124F1035B24462",
+				"FCB5A7C7C5AD1FE01EE98C88",
+				"CD2C46354B50CDF56D9BCD8D",
+			);
+			"developmentRegion" = "zh-Hans";
+			"knownRegions" = (
+				"zh-Hans",
+				"en",
+				"Base",
+			);
+			"isa" = "PBXProject";
+			"compatibilityVersion" = "Xcode 14.0";
+			"productRefGroup" = "FBDC4F23F93125BBEEAE800C";
+			"projectDirPath" = "";
+			"attributes" = {
+				"LastUpgradeCheck" = "1600";
+				"BuildIndependentTargetsInParallel" = "YES";
+			};
+			"hasScannedForEncodings" = "0";
+			"projectRoot" = "";
+			"mainGroup" = "B28B7AF69320201D1CF206EB";
+		};
+		"FEA537673C124F1035B24462" = {
+			"productType" = "com.apple.product-type.application";
+			"productReference" = "87032DA25FA5CED6ABFBFED2";
+			"buildConfigurationList" = "30A4A9604327F0EFBC914DFC";
+			"productName" = "DailyJournalProbeMac";
+			"isa" = "PBXNativeTarget";
+			"buildPhases" = (
+				"7C78EDF33BD590A5884FE046",
+				"B7963C781ACA479F104E7BD9",
+				"4A2B3ABC430C7F9000B5E266",
+			);
+			"dependencies" = (
+			);
+			"name" = "DailyJournalProbeMac";
+			"buildRules" = (
+			);
+		};
+		"8718127013BDF19726D69462" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "75B976A514C2BB581F7B4AF9";
+		};
+		"0EB899A5C6C93EC13078AA57" = {
+			"path" = "DailyJournalProbeiPhone.app";
+			"isa" = "PBXFileReference";
+			"includeInIndex" = "0";
+			"explicitFileType" = "wrapper.application";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"3728D1857EF4959B6874E854" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
+				"CODE_SIGN_ENTITLEMENTS" = "Config/macOS.entitlements";
+				"MARKETING_VERSION" = "0.1.0";
+				"MACOSX_DEPLOYMENT_TARGET" = "15.0";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "日常·同步验证";
+				"SUPPORTED_PLATFORMS" = "macosx";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"SDKROOT" = "macosx";
+				"SWIFT_VERSION" = "5.0";
+				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.productivity";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"COMBINE_HIDPI_IMAGES" = "YES";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.probe.mac";
+			};
+			"name" = "Debug";
+		};
+		"F89B347B1B62BADA9562D8D1" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Package.swift";
+			"sourceTree" = "<group>";
+		};
+		"00CFAFF65D99DC64B4875DEF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "54D88AF96CFBD85E62134CE3";
+		};
+		"30A4A9604327F0EFBC914DFC" = {
+			"isa" = "XCConfigurationList";
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+			"buildConfigurations" = (
+				"3728D1857EF4959B6874E854",
+				"895B92ECBA22AD5C6314FAE8",
+			);
+		};
+		"8C96635B22EF75B4D8B82C33" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.plist.xml";
+			"path" = "Config/JournalInfo.plist";
+			"sourceTree" = "<group>";
+		};
+		"895B92ECBA22AD5C6314FAE8" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CURRENT_PROJECT_VERSION" = "1";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
+				"CODE_SIGN_ENTITLEMENTS" = "Config/macOS.entitlements";
+				"MARKETING_VERSION" = "0.1.0";
+				"MACOSX_DEPLOYMENT_TARGET" = "15.0";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"INFOPLIST_KEY_CFBundleDisplayName" = "日常·同步验证";
+				"SUPPORTED_PLATFORMS" = "macosx";
+				"CODE_SIGN_STYLE" = "Automatic";
+				"SDKROOT" = "macosx";
+				"SWIFT_VERSION" = "5.0";
+				"INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.productivity";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"COMBINE_HIDPI_IMAGES" = "YES";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "cn.xcbg.dailyjournal.probe.mac";
+			};
+			"name" = "Release";
+		};
+		"75B976A514C2BB581F7B4AF9" = {
+			"path" = "Sources/ProbeCore/ProbeRepository.swift";
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"sourceTree" = "<group>";
+		};
+		"A059DCDDA60EC82F3E6162A0" = {
+			"isa" = "XCConfigurationList";
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+			"buildConfigurations" = (
+				"15D5F5AFE9396D5A39C0B09B",
+				"B44DDAEAA5F1AD55394874D2",
+			);
+		};
+		"F3E5E9AFF1AF45C9A494D728" = {
+			"isa" = "XCRemoteSwiftPackageReference";
+			"repositoryURL" = "https://github.com/gonzalezreal/swift-markdown-ui.git";
+			"requirement" = {
+				"kind" = "exactVersion";
+				"version" = "2.4.1";
+			};
+		};
+		"96995F06D4D81676E53E1810" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "image.icns";
+			"path" = "Config/AppIcon.icns";
+			"sourceTree" = "<group>";
+		};
+		"5AE0009ACDA9435977A14885" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "Config/THIRD-PARTY-NOTICES.txt";
+			"sourceTree" = "<group>";
+		};
+		"39D926CD13000BBC155712D7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "96995F06D4D81676E53E1810";
+		};
+		"AA86D12AC8CE223E1FB208B6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "5AE0009ACDA9435977A14885";
+		};
+	};
+	"rootObject" = "98F54143AB4E86B28C3AFEE0";
 }
